@@ -44,24 +44,6 @@ class Character {
       created: DateTime.parse(json['created']),
     );
   }
-
-  // Convert Character object to Map
-  Map<String, dynamic> toMap() {
-    return {
-      'id': id,
-      'name': name,
-      'status': status,
-      'species': species,
-      'type': type,
-      'gender': gender,
-      'origin': origin.toMap(),
-      'location': location.toMap(),
-      'image': image,
-      'episode': episode,
-      'url': url,
-      'created': created.toIso8601String(),
-    };
-  }
 }
 
 
@@ -80,13 +62,5 @@ class Location {
       name: json['name'],
       url: json['url'],
     );
-  }
-
-  // Convert Location object to Map
-  Map<String, dynamic> toMap() {
-    return {
-      'name': name,
-      'url': url,
-    };
   }
 }
