@@ -21,4 +21,21 @@ class CharacterApiService {
       return [];
     }
   }
+
+  Future<Character?> fetchSingleCharacter(int id) async {
+    final url = Uri.parse('$baseUrl/character/$id');
+    try {
+      final response = await http.get(url);
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return Character.fromJson(data);
+      } else {
+        print('Failed to load character: ${response.statusCode}');
+        return null;
+      }
+    } catch (e) {
+      print('Error fetching character: $e');
+      return null;
+    }
+  }
 }
