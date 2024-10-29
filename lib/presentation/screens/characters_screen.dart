@@ -14,11 +14,71 @@ class CharacterScreen extends StatefulWidget {
 
 class _CharacterScreenState extends State<CharacterScreen> {
   List<Character>? allCharacter;
+  List<Character>? searchedForCharacter;
+  bool _isSearching = false;
+  final TextEditingController _searchController = TextEditingController();
+
+  Widget buildSearchField() {
+    return TextField(
+      controller: _searchController,
+      cursorColor: MyColor.myGray,
+      decoration: const InputDecoration(
+        hintText: "Find a Character...",
+        border: InputBorder.none,
+        hintStyle: TextStyle(fontSize: 16, color: MyColor.myGray),
+      ),
+      style: const TextStyle(fontSize: 16, color: MyColor.myGray),
+      onChanged: (searchedCharacter) {
+        searchedForCharacter = allCharacter!
+            .where((character) =>
+                character.name.toLowerCase().startsWith(searchedCharacter))
+            .toList();
+        setState(() {});
+      },
+    );
+  }
+
+  List<Widget> buildAppBarSearch() {
+    if (_isSearching) {
+      return [
+        IconButton(
+            onPressed: () {
+              stopSearching();
+              Navigator.pop(context);
+            },
+            icon: const Icon(Icons.clear)),
+      ];
+    } else {
+      return [
+        IconButton(onPressed: startSearch, icon: const Icon(Icons.search))
+      ];
+    }
+  }
+
+  void startSearch() {
+    ModalRoute.of(context)!
+        .addLocalHistoryEntry(LocalHistoryEntry(onRemove: stopSearching));
+    setState(() {
+      _isSearching = true;
+    });
+  }
+
+  void stopSearching() {
+    setState(() {
+      _searchController.clear();
+      _isSearching = false;
+    });
+  }
+
+  Widget buildAppBarTitle() {
+    return const Text('Characters');
+  }
+
   @override
   void initState() {
     super.initState();
     // Convert BlocProvider from Lazy to Active
-    allCharacter = BlocProvider.of<CharactersCubit>(context).getAllCharacter();
+    BlocProvider.of<CharactersCubit>(context).getAllCharacter();
   }
 
   @override
@@ -28,22 +88,34 @@ class _CharacterScreenState extends State<CharacterScreen> {
         appBar: AppBar(
           backgroundColor: MyColor.myYellow,
           foregroundColor: MyColor.myGray,
-          title: const Text('Characters'),
+          title: _isSearching ? buildSearchField() : buildAppBarTitle(),
+          actions: buildAppBarSearch(),
         ),
         body: BlocBuilder<CharactersCubit, CharactersState>(
           builder: (context, state) {
             if (state is CharactersIsLoaded) {
               allCharacter = (state).characters;
               return GridView.builder(
-                itemCount: allCharacter!.length,
+                itemCount: _searchController.text.isEmpty
+                    ? allCharacter!.length
+                    : searchedForCharacter!.length,
                 gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2, mainAxisSpacing: 1, crossAxisSpacing: 1,childAspectRatio: 2/3),
+                    crossAxisCount: 2,
+                    mainAxisSpacing: 1,
+                    crossAxisSpacing: 1,
+                    childAspectRatio: 2 / 3),
                 itemBuilder: (context, index) {
-                  return CharacterItem(character: allCharacter![index]);
+                  return CharacterItem(
+                      character: _searchController.text.isEmpty
+                          ? allCharacter![index]
+                          : searchedForCharacter![index]);
                 },
               );
             } else {
-              return const Center(child: CircularProgressIndicator(color: Colors.yellow,));
+              return const Center(
+                  child: CircularProgressIndicator(
+                color: Colors.yellow,
+              ));
             }
           },
         ));
