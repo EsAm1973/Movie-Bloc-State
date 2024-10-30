@@ -50,7 +50,12 @@ class _CharacterScreenState extends State<CharacterScreen> {
       ];
     } else {
       return [
-        IconButton(onPressed: startSearch, icon: const Icon(Icons.search))
+        IconButton(
+            onPressed: startSearch,
+            icon: const Icon(
+              Icons.search,
+              size: 25,
+            ))
       ];
     }
   }
