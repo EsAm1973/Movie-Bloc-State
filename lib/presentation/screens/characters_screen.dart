@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_offline/flutter_offline.dart';
 import 'package:movie_bloc_state/buisness_logic_layey/cubit/characters_cubit.dart';
 import 'package:movie_bloc_state/constants/myColors.dart';
 import 'package:movie_bloc_state/data/model/character.dart';
@@ -79,6 +80,26 @@ class _CharacterScreenState extends State<CharacterScreen> {
     return const Text('Characters');
   }
 
+  Widget buildNoInternetWidget() {
+    return Center(
+      child: Container(
+        color: MyColor.myWhite,
+        child: Column(
+          children: [
+            const SizedBox(
+              height: 20,
+            ),
+            const Text(
+              'No Internet, Check internet',
+              style: TextStyle(color: MyColor.myGray, fontSize: 24),
+            ),
+            Image.asset('assets/offline.png'),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   void initState() {
     super.initState();
@@ -96,33 +117,51 @@ class _CharacterScreenState extends State<CharacterScreen> {
           title: _isSearching ? buildSearchField() : buildAppBarTitle(),
           actions: buildAppBarSearch(),
         ),
-        body: BlocBuilder<CharactersCubit, CharactersState>(
-          builder: (context, state) {
-            if (state is CharactersIsLoaded) {
-              allCharacter = (state).characters;
-              return GridView.builder(
-                itemCount: _searchController.text.isEmpty
-                    ? allCharacter!.length
-                    : searchedForCharacter!.length,
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    mainAxisSpacing: 1,
-                    crossAxisSpacing: 1,
-                    childAspectRatio: 2 / 3),
-                itemBuilder: (context, index) {
-                  return CharacterItem(
-                      character: _searchController.text.isEmpty
-                          ? allCharacter![index]
-                          : searchedForCharacter![index]);
+        body: OfflineBuilder(
+          connectivityBuilder: (
+            BuildContext context,
+            List<ConnectivityResult> connectivity,
+            Widget child,
+          ) {
+            final bool connected =
+                !connectivity.contains(ConnectivityResult.none);
+            if (connected) {
+              return BlocBuilder<CharactersCubit, CharactersState>(
+                builder: (context, state) {
+                  if (state is CharactersIsLoaded) {
+                    allCharacter = (state).characters;
+                    return GridView.builder(
+                      itemCount: _searchController.text.isEmpty
+                          ? allCharacter!.length
+                          : searchedForCharacter!.length,
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: 2,
+                              mainAxisSpacing: 1,
+                              crossAxisSpacing: 1,
+                              childAspectRatio: 2 / 3),
+                      itemBuilder: (context, index) {
+                        return CharacterItem(
+                            character: _searchController.text.isEmpty
+                                ? allCharacter![index]
+                                : searchedForCharacter![index]);
+                      },
+                    );
+                  } else {
+                    return const Center(
+                        child: CircularProgressIndicator(
+                      color: Colors.yellow,
+                    ));
+                  }
                 },
               );
             } else {
-              return const Center(
-                  child: CircularProgressIndicator(
-                color: Colors.yellow,
-              ));
+              return buildNoInternetWidget();
             }
           },
+          child: const Center(
+            child: CircularProgressIndicator(),
+          ),
         ));
   }
 }
